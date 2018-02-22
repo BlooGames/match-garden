@@ -50,7 +50,7 @@ public class MatchingManager : MonoBehaviour
 
                 matches.ForEach(match =>
                 {
-                    AnimatorUtils.Trigger(match.gameObject, "BeginMatch");
+                    AnimatorUtils.Trigger(match.gameObject, "IsMatching");
                 });
 
                 yield return matches[0].ProcessMatch(matches, matchTiles, board);
@@ -65,6 +65,7 @@ public class MatchingManager : MonoBehaviour
                     }
                 });
 
+                yield return new WaitForEndOfFrame();
                 MoveTilesDown(board);
                 pieceProvider.FillEmptySpaces(board);
             }

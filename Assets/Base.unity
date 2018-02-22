@@ -156,7 +156,7 @@ MonoBehaviour:
   - piecePrefab: {fileID: 114100152616295440, guid: 2cdfbc7d1db2d5146b21c3a9e08970f2,
       type: 2}
     chances: 5
-  - piecePrefab: {fileID: 114359126035104932, guid: 9cd28c892a1f78f48ba9d7944d6e9621,
+  - piecePrefab: {fileID: 114310917066553708, guid: 9cd28c892a1f78f48ba9d7944d6e9621,
       type: 2}
     chances: 25
   - piecePrefab: {fileID: 114072359841586044, guid: 534c87fb1f140b94186baa29077a1648,
