@@ -9,6 +9,9 @@ public class WaterPiece : MatchPiece
 
     [SerializeField]
     private float destroyFireWaitTime = 0.7f;
+    [SerializeField]
+    private float bloomWaitTime = 0.7f;
+
     public override Type TileType
     {
         get
@@ -29,7 +32,8 @@ public class WaterPiece : MatchPiece
     {
         bool destroyedFire = false;
 
-        foreach (Tile tile in board.GetAdjacentTiles(matchTiles, false))
+        var adjacentTiles = board.GetAdjacentTiles(matchTiles, false);
+        foreach (Tile tile in adjacentTiles)
         {
             if (!tile.HasContents)
             {
@@ -51,6 +55,33 @@ public class WaterPiece : MatchPiece
         if (destroyedFire)
         {
             yield return new WaitForSeconds(destroyFireWaitTime);
+        }
+
+        bool bloomed = false;
+
+        foreach (Tile tile in adjacentTiles)
+        {
+            if (!tile.HasContents)
+            {
+                continue;
+            }
+
+            MatchPiece piece = tile.Contents.GetComponent<MatchPiece>();
+            if (piece.Matches(typeof(SeedPiece)))
+            {
+                var flowerPrefab = ((SeedPiece)piece).FlowerPrefab.gameObject;
+                tile.PushContentsFromPrefab(flowerPrefab);
+                if (!AnimatorUtils.Trigger(piece.gameObject, "Bloom"))
+                {
+                    Destroy(piece.gameObject);
+                }
+                bloomed = true;
+            }
+        }
+
+        if (bloomed)
+        {
+            yield return new WaitForSeconds(bloomWaitTime);
         }
     }
 }

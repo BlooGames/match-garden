@@ -5,12 +5,38 @@ using UnityEngine;
 
 public class MatchingManager : MonoBehaviour
 {
+    public delegate void OnScoreChanged(int score, int byAmount);
+    public delegate void OnTurnsChanged(int turns, int byAmount, bool specialEvent);
     [SerializeField]
     private Board board;
     [SerializeField]
     private PieceProvider pieceProvider;
     [SerializeField]
     private int minimumMatches;
+    [SerializeField]
+    private int startingTurns;
+
+    public int Score { get; private set; }
+
+    public int RemainingTurns { get; private set; }
+    public OnScoreChanged onScoreChanged;
+    public OnTurnsChanged onTurnsChanged;
+
+    public static MatchingManager Instance { get; private set; }
+
+    void Awake()
+    {
+        if (Instance)
+        {
+            Destroy(gameObject);
+        }
+        else
+        {
+            Instance = this;
+        }
+        RemainingTurns = startingTurns;
+        Score = 0;
+    }
 
     void Start()
     {
@@ -23,6 +49,8 @@ public class MatchingManager : MonoBehaviour
         board.Clear();
         board.GenerateBoard();
         pieceProvider.FillEmptySpaces(board);
+        RemainingTurns = startingTurns;
+        StartCoroutine(ScrambleBoardIfNecessary(board));
     }
 
     void OnTileClicked(Board board, Tile tile)
@@ -48,6 +76,9 @@ public class MatchingManager : MonoBehaviour
                     yield break;
                 }
 
+                ChangeRemainingTurns(-1, false);
+                ChangeScore(matches[0].ScoreMatch(matches));
+
                 matches.ForEach(match =>
                 {
                     AnimatorUtils.Trigger(match.gameObject, "IsMatching");
@@ -65,15 +96,36 @@ public class MatchingManager : MonoBehaviour
                     }
                 });
 
-                yield return new WaitForEndOfFrame();
-                MoveTilesDown(board);
-                pieceProvider.FillEmptySpaces(board);
+                yield return FillBoard(board);
             }
         }
         finally
         {
             board.Unlock();
         }
+    }
+
+    private IEnumerator FillBoard(Board board)
+    {
+        yield return new WaitForEndOfFrame();
+        MoveTilesDown(board);
+        pieceProvider.FillEmptySpaces(board);
+
+        yield return ScrambleBoardIfNecessary(board);
+    }
+
+    public void ChangeRemainingTurns(int byAmount, bool isSpecialEvent)
+    {
+        RemainingTurns += byAmount;
+        if (onTurnsChanged != null) onTurnsChanged(RemainingTurns, byAmount, isSpecialEvent);
+        Debug.Log("Remaining turns: " + RemainingTurns + " (" + ((byAmount >= 0) ? "+" : "") + byAmount + ")");
+    }
+
+    public void ChangeScore(int byAmount)
+    {
+        Score += byAmount;
+        if (onScoreChanged != null) onScoreChanged(Score, byAmount);
+
     }
 
     List<Tile> GetAdjacentMatches(Board board, Tile tile)
@@ -106,6 +158,64 @@ public class MatchingManager : MonoBehaviour
         }
 
         return result;
+    }
+
+    private IEnumerator ScrambleBoardIfNecessary(Board board, int attempts = 0)
+    {
+        if (attempts >= 5)
+        {
+            foreach (Tile tile in board.Tiles)
+            {
+                if (tile.HasContents)
+                {
+                    GameObject contents = tile.PushContents(null);
+                    AnimatorUtils.Trigger(contents, "Matched");
+                }
+            }
+            yield return new WaitForSeconds(1.5f);
+            yield return FillBoard(board);
+        }
+
+        if (BoardHasNoMatches(board))
+        {
+            yield return new WaitForSeconds(1.5f);
+            yield return ScrambleBoard(board);
+            yield return ScrambleBoardIfNecessary(board, attempts + 1);
+        }
+    }
+
+    private bool BoardHasNoMatches(Board board)
+    {
+        foreach (Tile tile in board.Tiles)
+        {
+            if (tile.HasContents 
+                && tile.Contents.GetComponent<MatchPiece>().CanMatch 
+                && GetAdjacentMatches(board, tile).Count >= minimumMatches)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private IEnumerator ScrambleBoard(Board board)
+    {
+        List<GameObject> contentsList = new List<GameObject>();
+        foreach (Tile tile in board.Tiles)
+        {
+            contentsList.Add(tile.PushContents(null));
+        }
+
+        contentsList = contentsList.OrderBy(contents => Random.value).ToList();
+
+        int i = 0;
+        foreach (Tile tile in board.Tiles)
+        {
+            tile.PushContentsAndMoveToCenter(contentsList[i], 0.7f);
+            i++;
+        }
+
+        yield return new WaitForSeconds(0.7f);
     }
 
     void MoveTilesDown(Board board)

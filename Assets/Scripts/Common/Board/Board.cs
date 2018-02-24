@@ -186,7 +186,9 @@ public class Board : MonoBehaviour {
         return (from tile in tiles
                 select GetAdjacentTiles(tile, false))
                 .Aggregate((acc, list) => acc.Union(list).ToList())
-                .Distinct().ToList();
+                .Distinct()
+                .Except(tiles)
+                .ToList();
     }
 
     public void OnAnyTileBeginClick(Tile tile)

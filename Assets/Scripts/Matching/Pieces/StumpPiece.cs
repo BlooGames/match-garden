@@ -16,7 +16,7 @@ public class StumpPiece : MatchPiece
     {
         get
         {
-            return true;
+            return false;
         }
     }
 }

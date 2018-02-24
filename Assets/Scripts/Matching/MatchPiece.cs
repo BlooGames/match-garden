@@ -18,6 +18,17 @@ public abstract class MatchPiece : MonoBehaviour
         yield break;
     }
 
+    public virtual int ScoreMatch(List<MatchPiece> matches)
+    {
+        // The first piece in a match is worth zero, and each one after that is worth one more than the last.
+        int score = 0;
+        for (int i = 0; i < matches.Count; i++)
+        {
+            score += i;
+        }
+        return score;
+    }
+
     public bool Matches(MatchPiece otherPiece)
     {
         return TileType.Equals(otherPiece.TileType);
@@ -31,5 +42,13 @@ public abstract class MatchPiece : MonoBehaviour
     public void DestroySelf()
     {
         Destroy(gameObject);
+    }
+
+    public void BringToFront()
+    {
+        foreach (SpriteRenderer sprite in GetComponentsInChildren<SpriteRenderer>())
+        {
+            sprite.sortingOrder = 99;
+        }
     }
 }

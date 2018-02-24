@@ -53,10 +53,10 @@ GameObject:
   m_Component:
   - component: {fileID: 4869269706719778}
   - component: {fileID: 61095765690501548}
-  - component: {fileID: 114261395438538322}
   - component: {fileID: 95719515977581680}
+  - component: {fileID: 114001752403527010}
   m_Layer: 0
-  m_Name: Fire
+  m_Name: Flower
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -145,7 +145,7 @@ Animator:
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
---- !u!114 &114261395438538322
+--- !u!114 &114001752403527010
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
@@ -153,10 +153,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1573027165440786}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 57fcc594cfbf5414abb350d0980dff73, type: 3}
+  m_Script: {fileID: 11500000, guid: 5ace4aeb496ecb24f8cbdf86f88450d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  destroyPieceWaitTime: 0.7
 --- !u!212 &212442554678023496
 SpriteRenderer:
   m_ObjectHideFlags: 1
@@ -235,7 +234,7 @@ SpriteRenderer:
   m_SortingLayerID: 1566457517
   m_SortingLayer: 2
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 14acf902467b0cf4dac992e24d5867a9, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 7b21979ff5987df42939cceb68c753c3, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -279,7 +278,7 @@ SpriteMask:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 14acf902467b0cf4dac992e24d5867a9, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 7b21979ff5987df42939cceb68c753c3, type: 3}
   m_MaskAlphaCutoff: 0.159
   m_FrontSortingLayerID: 1566457517
   m_BackSortingLayerID: 1566457517

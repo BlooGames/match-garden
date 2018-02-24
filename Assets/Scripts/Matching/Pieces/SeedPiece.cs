@@ -5,6 +5,17 @@ using UnityEngine;
 
 public class SeedPiece : MatchPiece 
 {
+    [SerializeField]
+    private MatchPiece flowerPrefab;
+    
+    public MatchPiece FlowerPrefab
+    {
+        get
+        {
+            return flowerPrefab;
+        }
+    }
+
     public override Type TileType
     {
         get

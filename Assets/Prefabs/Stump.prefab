@@ -258,6 +258,6 @@ SpriteMask:
   m_BackSortingLayerID: 1566457517
   m_FrontSortingLayer: 2
   m_BackSortingLayer: 2
-  m_FrontSortingOrder: 3
+  m_FrontSortingOrder: 100
   m_BackSortingOrder: 1
   m_IsCustomRangeActive: 1
