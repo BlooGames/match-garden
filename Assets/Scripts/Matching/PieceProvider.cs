@@ -38,9 +38,11 @@ public class PieceProvider : MonoBehaviour {
 	private List<PieceData> pieces;
     [SerializeField]
     private float repeatPieceChance;
-	private List<PieceData> weightedPieces;
+    [SerializeField]
+    private int maximumClump = 4;
+    private List<PieceData> weightedPieces;
 
-    void Start() 
+    void Awake() 
     {
         weightedPieces = GenerateWeightedPieceData(pieces);    
     }
@@ -56,27 +58,61 @@ public class PieceProvider : MonoBehaviour {
                 {
                     continue;
                 }
-                tile.PushContentsFromPrefab(ChooseNextPiece(tile, board, pieces, weightedPieces));
+                tile.PushContentsFromPrefab(ChooseNextPiece(tile, board, pieces, weightedPieces).PiecePrefab);
                 LeanTween.moveLocalY(tile.Contents, 0f, 0.5f).setFrom(5f).setEase(LeanTweenType.easeInOutQuad);
                 LeanTween.alpha(tile.Contents, 1f, 0.3f).setFrom(0f).setEase(LeanTweenType.easeInOutQuad);
             }
         }
 	}
 
-    public GameObject ChooseNextPiece(Tile tile, Board board, List<PieceData> unweightedPieceOptions, List<PieceData> weightedPieceOptions)
+    private PieceData ChooseNextPiece(Tile tile, Board board, List<PieceData> unweightedPieceOptions, List<PieceData> weightedPieceOptions)
     {
-        GameObject result = null;
+        int attempts = 0;
+        PieceData result;
+        do
+        {
+            result = ChoosePossibleNextPiece(tile, board, unweightedPieceOptions, weightedPieceOptions, attempts);
+            attempts++;
+            if (attempts >= 10)
+            {
+                Debug.Log("Failed to find non-clumping tiles.");
+                break;
+            }
+        } while (IsClumped(tile, board, result));
+        return result;
+    }
+
+    private PieceData ChoosePossibleNextPiece(Tile tile, Board board, List<PieceData> unweightedPieceOptions, List<PieceData> weightedPieceOptions, int attempts = 0)
+    {
+        PieceData result = null;
 
         if (Random.value < repeatPieceChance)
         {
             result = ChooseAdjacentPiece(tile, board, unweightedPieceOptions);
-            if (result) return result;
+            if (result != null)
+            {
+                return result;
+            }
         }
-
-        return weightedPieceOptions[Random.Range(0, weightedPieceOptions.Count)].PiecePrefab;
+        int random = Random.Range(0, weightedPieceOptions.Count);
+        return weightedPieceOptions[random];
     }
 
-    public GameObject ChooseAdjacentPiece(Tile tile, Board board, List<PieceData> pieceOptions)
+    public bool IsClumped(Tile tile, Board board, PieceData pieceData)
+    {
+        List<Tile> adjacentTiles = board.GetAdjacentTiles(tile, false);
+        int clumpSize = adjacentTiles
+            .Where(adjacentTile => {
+                return adjacentTile.HasContents && pieceData.Matches(adjacentTile.Contents.GetComponent<MatchPiece>()); 
+            })
+            .Select(adjacentTile => MatchingManager.Instance.GetAdjacentMatches(board, adjacentTile, true))
+            .Aggregate(new List<Tile>(), (acc, list) => acc.Union(list).ToList())
+            .Distinct()
+            .Count();
+        return clumpSize >= maximumClump;
+    }
+
+    public PieceData ChooseAdjacentPiece(Tile tile, Board board, List<PieceData> pieceOptions)
     {
         List<Tile> shuffledTiles = board.GetAdjacentTiles(tile, false)
             .OrderBy(a => Random.value)
@@ -91,7 +127,7 @@ public class PieceProvider : MonoBehaviour {
             {
                 if (pieceOption.Matches(matchPiece))
                 {
-                    return pieceOption.PiecePrefab;
+                    return pieceOption;
                 }
             }
         }

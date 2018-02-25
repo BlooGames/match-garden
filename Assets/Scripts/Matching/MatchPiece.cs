@@ -20,11 +20,21 @@ public abstract class MatchPiece : MonoBehaviour
 
     public virtual int ScoreMatch(List<MatchPiece> matches)
     {
-        // The first piece in a match is worth zero, and each one after that is worth one more than the last.
+        //// The first piece in a match is worth zero, and each one after that is worth one more than the last.
+        //int score = 0;
+        //for (int i = 0; i < matches.Count; i++)
+        //{
+        //    score += i;
+        //}
         int score = 0;
+        int multiplier = 0;
         for (int i = 0; i < matches.Count; i++)
         {
-            score += i;
+            if (i % 2 == 0)
+            {
+                multiplier++;
+            }
+            score += multiplier;
         }
         return score;
     }

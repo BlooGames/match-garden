@@ -22,11 +22,12 @@ public class FirePiece : MatchPiece
     }
 
     [SerializeField]
-    private float destroyPieceWaitTime = 0.7f;
+    private float destroyPieceWaitTime = 1f;
 
     public override IEnumerator ProcessMatch(List<MatchPiece> matches, List<Tile> matchTiles, Board board)
     {
         bool destroyedPiece = false;
+        int stumpsDestroyed = 0;
 
         foreach (Tile tile in board.GetAdjacentTiles(matchTiles, false))
         {
@@ -38,6 +39,10 @@ public class FirePiece : MatchPiece
             MatchPiece piece = tile.Contents.GetComponent<MatchPiece>();
             if (!piece.Matches(typeof(WaterPiece)))
             {
+                if (piece.Matches(typeof(StumpPiece)))
+                {
+                    stumpsDestroyed++;
+                }
                 tile.PushContents(null);
                 if (!AnimatorUtils.Trigger(piece.gameObject, "DestroyWithFire"))
                 {
@@ -49,6 +54,11 @@ public class FirePiece : MatchPiece
 
         if (destroyedPiece)
         {
+            if (stumpsDestroyed > 0)
+            {
+                MatchingManager.Instance.ChangeScore(stumpsDestroyed * 5);
+            }
+
             yield return new WaitForSeconds(destroyPieceWaitTime);
         }
     }

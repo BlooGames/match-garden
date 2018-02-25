@@ -16,6 +16,14 @@ public class MatchingLevel : MonoBehaviour {
 
     [SerializeField]
     private string levelName;
+    public string LevelName
+    {
+        get
+        {
+            return levelName;
+        }
+    }
+
     private PieceProvider pieceProvider;
     public PieceProvider PieceProvider
     {
@@ -23,7 +31,7 @@ public class MatchingLevel : MonoBehaviour {
         {
             if (!pieceProvider)
             {
-                pieceProvider = GetComponentInChildren<PieceProvider>();
+                pieceProvider = GetComponent<PieceProvider>();
             }
             return pieceProvider;
         }

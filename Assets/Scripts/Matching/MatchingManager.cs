@@ -7,10 +7,11 @@ public class MatchingManager : MonoBehaviour
 {
     public delegate void OnScoreChanged(int score, int byAmount);
     public delegate void OnTurnsChanged(int turns, int byAmount, bool specialEvent);
+    public delegate void OnEndGame(int score, int level, int highScore, int highLevel, bool beatHighScore);
     [SerializeField]
     private Board board;
     [SerializeField]
-    private PieceProvider pieceProvider;
+    private LevelProvider levelProvider;
     [SerializeField]
     private int minimumMatches;
     [SerializeField]
@@ -21,6 +22,8 @@ public class MatchingManager : MonoBehaviour
     public int RemainingTurns { get; private set; }
     public OnScoreChanged onScoreChanged;
     public OnTurnsChanged onTurnsChanged;
+    public OnEndGame onEndGame;
+    public LevelProvider.OnLevelProgressChanged onLevelProgressChanged;
 
     public static MatchingManager Instance { get; private set; }
 
@@ -41,6 +44,7 @@ public class MatchingManager : MonoBehaviour
     void Start()
     {
         board.onTileClicked += OnTileClicked;
+        levelProvider.onLevelProgressChanged += OnLevelProgressChanged;
         Play();
     }
 
@@ -48,9 +52,15 @@ public class MatchingManager : MonoBehaviour
     {
         board.Clear();
         board.GenerateBoard();
-        pieceProvider.FillEmptySpaces(board);
+        levelProvider.Init();
+        levelProvider.CurrentLevel.PieceProvider.FillEmptySpaces(board);
         RemainingTurns = startingTurns;
         StartCoroutine(ScrambleBoardIfNecessary(board));
+    }
+
+    void OnLevelProgressChanged(MatchingLevel level, int currentProgress, int scoreToNextLevel)
+    {
+        if (onLevelProgressChanged != null) onLevelProgressChanged(level, currentProgress, scoreToNextLevel);
     }
 
     void OnTileClicked(Board board, Tile tile)
@@ -63,7 +73,7 @@ public class MatchingManager : MonoBehaviour
     {
         try
         {
-            if (tile.HasContents)
+            if (tile.HasContents && RemainingTurns > 0)
             {
                 List<Tile> matchTiles = GetAdjacentMatches(board, tile);
                 List<MatchPiece> matches = (from match in matchTiles
@@ -77,14 +87,14 @@ public class MatchingManager : MonoBehaviour
                 }
 
                 ChangeRemainingTurns(-1, false);
-                ChangeScore(matches[0].ScoreMatch(matches));
-
+                
                 matches.ForEach(match =>
                 {
                     AnimatorUtils.Trigger(match.gameObject, "IsMatching");
                 });
 
                 yield return matches[0].ProcessMatch(matches, matchTiles, board);
+                ChangeScore(matches[0].ScoreMatch(matches));
 
                 matchTiles.ForEach(matchedTile =>
                 {
@@ -97,6 +107,11 @@ public class MatchingManager : MonoBehaviour
                 });
 
                 yield return FillBoard(board);
+
+                if (RemainingTurns <= 0)
+                {
+                    EndGame();
+                }
             }
         }
         finally
@@ -109,7 +124,7 @@ public class MatchingManager : MonoBehaviour
     {
         yield return new WaitForEndOfFrame();
         MoveTilesDown(board);
-        pieceProvider.FillEmptySpaces(board);
+        levelProvider.CurrentLevel.PieceProvider.FillEmptySpaces(board);
 
         yield return ScrambleBoardIfNecessary(board);
     }
@@ -118,7 +133,6 @@ public class MatchingManager : MonoBehaviour
     {
         RemainingTurns += byAmount;
         if (onTurnsChanged != null) onTurnsChanged(RemainingTurns, byAmount, isSpecialEvent);
-        Debug.Log("Remaining turns: " + RemainingTurns + " (" + ((byAmount >= 0) ? "+" : "") + byAmount + ")");
     }
 
     public void ChangeScore(int byAmount)
@@ -128,14 +142,14 @@ public class MatchingManager : MonoBehaviour
 
     }
 
-    List<Tile> GetAdjacentMatches(Board board, Tile tile)
+    public List<Tile> GetAdjacentMatches(Board board, Tile tile, bool ignoreCanMatch = false)
     {
         List<Tile> result = new List<Tile>();
         result.Add(tile);
-        return GetAdjacentMatchesRecursive(result, board, tile);
+        return GetAdjacentMatchesRecursive(result, board, tile, ignoreCanMatch);
     }
 
-    private List<Tile> GetAdjacentMatchesRecursive(List<Tile> result, Board board, Tile tile)
+    private List<Tile> GetAdjacentMatchesRecursive(List<Tile> result, Board board, Tile tile, bool ignoreCanMatch)
     {
         MatchPiece piece = tile.Contents.GetComponent<MatchPiece>();
 
@@ -149,11 +163,11 @@ public class MatchingManager : MonoBehaviour
         foreach (Tile adjacentTile in adjacentTiles)
         {
             MatchPiece adjacentPiece = adjacentTile.HasContents ? adjacentTile.Contents.GetComponent<MatchPiece>() : null;
-            if (adjacentPiece && piece.CanMatch && adjacentPiece.CanMatch &&
+            if (adjacentPiece && (ignoreCanMatch || (piece.CanMatch && adjacentPiece.CanMatch)) &&
                 piece.Matches(adjacentPiece) && !result.Contains(adjacentTile))
             {
                 result.Add(adjacentTile);
-                GetAdjacentMatchesRecursive(result, board, adjacentTile);
+                GetAdjacentMatchesRecursive(result, board, adjacentTile, ignoreCanMatch);
             }
         }
 
@@ -240,6 +254,23 @@ public class MatchingManager : MonoBehaviour
                     }
                 }
             }
+        }
+    }
+
+    private void EndGame()
+    {
+        bool beatHighScore = false;
+
+        if (PlayerPrefs.GetInt("HighScore") < Score)
+        {
+            PlayerPrefs.SetInt("HighScore", Score);
+            PlayerPrefs.SetInt("HighScoreLevel", levelProvider.CurrentLevel.LevelId);
+            beatHighScore = true;
+        }
+
+        if (onEndGame != null)
+        {
+            onEndGame(Score, levelProvider.CurrentLevel.LevelId, PlayerPrefs.GetInt("HighScore"), PlayerPrefs.GetInt("HighScoreLevel"), beatHighScore);
         }
     }
 }

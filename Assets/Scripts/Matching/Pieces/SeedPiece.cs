@@ -28,7 +28,7 @@ public class SeedPiece : MatchPiece
 	{
 		get 
 		{
-			return false;
+			return true;
 		}
 	}
 }
