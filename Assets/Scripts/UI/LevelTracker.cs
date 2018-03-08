@@ -22,7 +22,7 @@ public class LevelTracker : MonoBehaviour {
 
     private void UpdateLevelInfo(MatchingLevel currentLevel, float fillAmount)
     {
-        string levelDescriptionString = "<b>Level " + currentLevel.LevelId + ":</b> " + currentLevel.LevelName;
+        string levelDescriptionString = "Level " + currentLevel.LevelId + ": " + currentLevel.LevelName;
         if (!lastLevel)
         {
             levelDescription.text = levelDescriptionString;
@@ -36,6 +36,7 @@ public class LevelTracker : MonoBehaviour {
             }, progressBar.fillAmount, 1f, 0.5f)
             .setOnComplete(() => {
                 levelDescription.text = levelDescriptionString;
+                AudioManager.Instance.PlaySound("LevelUp");
                 LeanTween.value(progressBar.gameObject, (float value, float ratio) =>
                 {
                     progressBar.fillAmount = value;

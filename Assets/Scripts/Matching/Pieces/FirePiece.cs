@@ -59,6 +59,7 @@ public class FirePiece : MatchPiece
                 MatchingManager.Instance.ChangeScore(stumpsDestroyed * 5);
             }
 
+            AudioManager.Instance.PlaySound("DestroyWithFire");
             yield return new WaitForSeconds(destroyPieceWaitTime);
         }
     }

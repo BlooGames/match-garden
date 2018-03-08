@@ -22,6 +22,7 @@ public class FlowerPiece : MatchPiece {
     public override IEnumerator ProcessMatch(List<MatchPiece> matches, List<Tile> matchTiles, Board board)
     {
         MatchingManager.Instance.ChangeRemainingTurns(Mathf.Min(matches.Count - 1, 9), true);
+        AudioManager.Instance.PlaySound("MatchFlower");
         yield return null;
     }
 }

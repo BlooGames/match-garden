@@ -26,7 +26,8 @@ public class GameOverTracker : MonoBehaviour {
     {
         Debug.Log("ENDED");
         panel.gameObject.SetActive(true);
-        LeanTween.alphaCanvas(panel, 1f, 0.5f).setFrom(1f);
+        LeanTween.alphaCanvas(panel, 1f, 0.5f).setFrom(0f);
+        AudioManager.Instance.PlaySound("GameOver");
         scoreText.text = score + "";
         levelText.text = "Level " + level;
         highScoreText.text = highScore + "";

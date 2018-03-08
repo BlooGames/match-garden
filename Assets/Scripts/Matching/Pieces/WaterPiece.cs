@@ -54,6 +54,7 @@ public class WaterPiece : MatchPiece
 
         if (destroyedFire)
         {
+            AudioManager.Instance.PlaySound("DestroyWithWater");
             yield return new WaitForSeconds(destroyFireWaitTime);
         }
 
@@ -81,6 +82,7 @@ public class WaterPiece : MatchPiece
 
         if (bloomed)
         {
+            AudioManager.Instance.PlaySound("BloomWithWater");
             yield return new WaitForSeconds(bloomWaitTime);
         }
     }

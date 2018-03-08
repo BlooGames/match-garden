@@ -16,6 +16,8 @@ public class MatchingManager : MonoBehaviour
     private int minimumMatches;
     [SerializeField]
     private int startingTurns;
+    [SerializeField]
+    private float waitBeforeProcessingMatch = 0.5f;
 
     public int Score { get; private set; }
 
@@ -75,16 +77,19 @@ public class MatchingManager : MonoBehaviour
         {
             if (tile.HasContents && RemainingTurns > 0)
             {
-                List<Tile> matchTiles = GetAdjacentMatches(board, tile);
+                List<Tile> matchTiles = GetAdjacentMatches(board, tile, true);
                 List<MatchPiece> matches = (from match in matchTiles
                 select match.Contents.GetComponent<MatchPiece>())
                 .ToList();
 
-                if (matches.Count < minimumMatches)
+                if (matches.Count < minimumMatches || !matches[0].CanMatch)
                 {
                     matches.ForEach(match => AnimatorUtils.Trigger(match.gameObject, "NoMatch"));
+                    AudioManager.Instance.PlaySound("NoMatch");
                     yield break;
                 }
+
+                AudioManager.Instance.PlaySound("Match");
 
                 ChangeRemainingTurns(-1, false);
                 
@@ -92,6 +97,8 @@ public class MatchingManager : MonoBehaviour
                 {
                     AnimatorUtils.Trigger(match.gameObject, "IsMatching");
                 });
+
+                yield return new WaitForSeconds(waitBeforeProcessingMatch);
 
                 yield return matches[0].ProcessMatch(matches, matchTiles, board);
                 ChangeScore(matches[0].ScoreMatch(matches));
